@@ -79,49 +79,39 @@ const postBook = (request, h) => {
  * @param {any} h
  */
 const getBooks = (request, h) => {
-  let book = [];
-
-  books.forEach((b) => {
-    book.push({
-      id: b.id,
-      name: b.name,
-      publisher: b.publisher,
-    });
-  });
-
   const { name, reading, finished } = request.query;
-
-  // return response of all books with same name from query paramaters
-  // if (name) {
-  //   book = book.filter((b) => b.name.toLowerCase() === nameQuery.toLowerCase());
-  //   if (book !== undefined) {
-  //     //
-  //   }
-  // }
-  // return response of all books is read or not read
+  let book = books;
+  if (name) {
+    book = book.filter((b) => b.name.toLowerCase().includes(name.toLowerCase()));
+    console.log(book);
+  }
   if (reading) {
     if (reading === '0') {
-      book = books.filter((b) => b.reading === false);
-      console.log(book);
+      book = book.filter((b) => b.reading === false);
     } else if (reading === '1') {
-      book = books.filter((b) => b.reading === true);
+      book = book.filter((b) => b.reading === true);
     }
   }
+
   if (finished) {
-  // return response of all finished or not finished books
     if (finished === '0') {
-      book = books.filter((b) => b.finished === false);
+      book = book.filter((b) => b.finished === false);
     } else if (finished === '1') {
-      book = books.filter((b) => b.finished === true);
+      book = book.filter((b) => b.finished === true);
     }
   }
-  console.log(book);
+
   const response = h.response({
     status: 'success',
     data: {
-      books: book,
+      books: book.map((b) => ({
+        id: b.id,
+        name: b.name,
+        publisher: b.publisher,
+      })),
     },
   });
+
   response.code(200);
   return response;
 };
@@ -153,12 +143,19 @@ const getBookById = (request, h) => {
   return response;
 };
 
+/**
+ * Update the book by given Id
+ * @param {any} request
+ * @param {any} h
+ * @returns
+ */
 const updateBookById = (request, h) => {
   const {
     name, year, author, summary, publisher, pageCount, readPage, reading,
   } = request.payload;
   const { bookId } = request.params;
   const indexOfUpdatedBook = books.findIndex((book) => book.id === bookId);
+
   if (indexOfUpdatedBook !== -1) {
     if (!name) {
       const response = h.response({
@@ -168,6 +165,7 @@ const updateBookById = (request, h) => {
       response.code(400);
       return response;
     }
+
     if (readPage > pageCount) {
       const response = h.response({
         status: 'fail',
@@ -203,6 +201,12 @@ const updateBookById = (request, h) => {
   return response;
 };
 
+/**
+ * delete the book by given id
+ * @param {any} request
+ * @param {any} h
+ * @returns
+ */
 const deleteBookById = (request, h) => {
   const { bookId } = request.params;
   const bookIndex = books.findIndex((book) => bookId === book.id);
